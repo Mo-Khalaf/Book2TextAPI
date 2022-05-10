@@ -56,7 +56,7 @@ class BookText(APIView):
         bookId = self.request.data['bookId']
         pageNumber = self.request.data['pageNumber']
         serializer = BookTextSerializer(data=request.data)
-        if serializer.is_valid(): 
+        if serializer.is_valid() and self.dbConnection.getTextBook(bookId) != None : 
             pageText = self.dbConnection.getTextBookPage(bookId, pageNumber )
             return Response(pageText ,status=200) 
         else : 
