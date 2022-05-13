@@ -2,7 +2,7 @@
 from django.db import models
 #converter packages
 from pdf2image import convert_from_path
-import os
+import os , re 
 import pytesseract
 from PIL import Image
 #database packages
@@ -39,13 +39,12 @@ class db_Connection():
 
     #list all textbook Ids
     def getBookIds(self):
-        counter = 1
-        bookIds = {f'book {counter} id':''}
+        
+        bookIds = {'bookId':[]}
         collection = db_Connection().getTextBookDB()
         doc = collection.find({},{'BookId':1})
         for id in doc :
-            bookIds[f'book {counter} id'] = (id['BookId'])
-            counter +=1
+            bookIds['bookId'].append(id['BookId'])
         return bookIds
 
     #get book url filterd by book id from database
@@ -117,7 +116,7 @@ class PDfConverter():
 
     def ocr(self, imgPath)  :   
         try:
-            text = pytesseract.image_to_string(Image.open(imgPath),lang='eng' , timeout=2) # Timeout after 2 seconds
+            text = pytesseract.image_to_string(Image.open(imgPath),lang='eng' ) # Timeout after 2 seconds
         except RuntimeError as timeout_error:
             # Tesseract processing is terminated
             pass
@@ -131,7 +130,7 @@ class PDfConverter():
         if not os.path.exists (outputdir):
             os.makedirs(outputdir)
         #convert the pdf to imgs
-        pages = convert_from_path(PdfPath, 200)
+        pages = convert_from_path(PdfPath, 150)
         counter = 1
         for page in pages:
             #convert every page to img
@@ -139,10 +138,13 @@ class PDfConverter():
             page.save(filePath, "JPEG")
 
             #convert img to text by OCR
-            imgText = PDfConverter().ocr(filePath)
-            pageDict = {str(counter):imgText}
+            imgText = PDfConverter().ocr(filePath) 
+            #filter text from special characters
+            filterdText = re.sub('[^A-Za-z0-9]+', ' ', imgText )
+            #save the text in dictionary form
+            pageDict = {str(counter):filterdText}
             textDict["Page"].update(pageDict)
 
-            print(f"page {counter} ... ✔") # depug ###########################################
+            print(f"page {counter} ... ✔") # monitoring ###########################################
             counter += 1
         return textDict
