@@ -130,7 +130,7 @@ class PDfConverter():
         if not os.path.exists (outputdir):
             os.makedirs(outputdir)
         #convert the pdf to imgs
-        pages = convert_from_path(PdfPath, 150)
+        pages = convert_from_path(PdfPath, 200)
         counter = 1
         for page in pages:
             #convert every page to img
@@ -140,7 +140,7 @@ class PDfConverter():
             #convert img to text by OCR
             imgText = PDfConverter().ocr(filePath) 
             #filter text from special characters
-            filterdText = re.sub('[^A-Za-z0-9]+', ' ', imgText )
+            filterdText = re.sub('[^A-Za-z0-9.,]+ ', '   ', imgText ).replace("\n"," ")
             #save the text in dictionary form
             pageDict = {str(counter):filterdText}
             textDict["Page"].update(pageDict)
